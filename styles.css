@@ -658,6 +658,61 @@ button:hover {
 }
 
 @media (max-width: 600px) {
+  #home-screen {
+    width: 100vw;
+    min-height: 100vh;
+    height: auto;
+    overflow-y: auto;
+    padding: 2vw 0 8vw 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .emoji-picker {
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100%;
+    align-items: center;
+  }
+  .emoji-options {
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .emoji-circle {
+    font-size: 1.5em;
+    width: 2em;
+    height: 2em;
+  }
+  .mode-buttons {
+    flex-direction: column;
+    gap: 10px;
+    width: 90vw;
+    align-items: center;
+  }
+  .mode-buttons button, #home-screen button {
+    width: 100%;
+    font-size: 1em;
+    padding: 12px 0;
+    margin: 8px 0;
+    min-width: unset;
+    max-width: 100%;
+  }
+  #main-logo {
+    max-width: 90vw !important;
+    width: 90vw !important;
+    margin-bottom: 10px !important;
+  }
+  #tutorial-btn {
+    width: 100%;
+    font-size: 1em;
+    margin: 10px 0 0 0;
+  }
+  p, label, .player-label {
+    font-size: 1em !important;
+  }
   .game-area {
     flex-direction: column;
     gap: 10px;

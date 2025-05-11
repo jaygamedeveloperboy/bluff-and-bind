@@ -139,9 +139,35 @@ function updatePlayerUI() {
     document.getElementById("player2-last-turn").style.display = 'none';
   }
 
-  // Update locked cards
-  updateLockedCards(1);
-  updateLockedCards(2);
+  // Control Perk: If the current player is being controlled, only enable the forced card
+  let controlActive = false;
+  let forcedCard = null;
+  if (activePerks[1]?.type === 'Control' && activePerks[1].target === 1 && playerTurn === 1) {
+    controlActive = true;
+    forcedCard = activePerks[1].forcedCard;
+  } else if (activePerks[2]?.type === 'Control' && activePerks[2].target === 2 && playerTurn === 2) {
+    controlActive = true;
+    forcedCard = activePerks[2].forcedCard;
+  }
+  if (controlActive) {
+    const grid = document.querySelector(`#player${playerTurn}-card-grid`);
+    const cards = grid.querySelectorAll('.card');
+    cards.forEach(card => {
+      const img = card.querySelector('img');
+      if (!img) return;
+      const cardType = img.alt.toUpperCase();
+      if (cardType === forcedCard && !lockedCards[playerTurn][cardType]) {
+        card.classList.remove('locked');
+        img.onclick = () => selectCard(cardType);
+      } else {
+        card.classList.add('locked');
+        img.onclick = null;
+      }
+    });
+  } else {
+    updateLockedCards(1);
+    updateLockedCards(2);
+  }
 
   // Handle wildcard visibility
   const p1Wildcard = document.querySelector("#player1 .wildcard");
@@ -249,6 +275,25 @@ function updateLockedCards(player) {
 function selectCard(card) {
   let cardType = card.toUpperCase();
   if (cardType === "WILDCARD") cardType = "WILD";
+
+  // Control Perk: Only allow forced card
+  if ((activePerks[1]?.type === 'Control' && activePerks[1].target === playerTurn && playerTurn === 1) ||
+      (activePerks[2]?.type === 'Control' && activePerks[2].target === playerTurn && playerTurn === 2)) {
+    let forcedCard = (activePerks[1]?.type === 'Control' && activePerks[1].target === playerTurn) ? activePerks[1].forcedCard : activePerks[2].forcedCard;
+    if (cardType !== forcedCard) {
+      alert(`You are being controlled! You must play ${forcedCard}.`);
+      return;
+    }
+    if (lockedCards[playerTurn][forcedCard]) {
+      alert(`The forced card (${forcedCard}) is locked. Control perk will not be used.`);
+      // Remove the control perk so the game can proceed
+      if (activePerks[1]?.type === 'Control' && activePerks[1].target === playerTurn) activePerks[1] = null;
+      if (activePerks[2]?.type === 'Control' && activePerks[2].target === playerTurn) activePerks[2] = null;
+      updatePlayerUI();
+      return;
+    }
+  }
+
   if (cardType === "WILD" && wildUsed[playerTurn]) {
     alert("You've already used your wildcard!");
     return;
@@ -328,6 +373,9 @@ function showResult() {
     alert("Trap activated! Player 1 loses an extra token!");
     activePerks[2] = null;
   }
+  // Always clear any remaining Trap perks at the end of the round
+  if (activePerks[1]?.type === 'Trap') activePerks[1] = null;
+  if (activePerks[2]?.type === 'Trap') activePerks[2] = null;
 
   const prevTokens = { 1: tokens[1], 2: tokens[2] };
   const result = evaluateMatchup(p1, p2, {
@@ -585,10 +633,18 @@ window.addEventListener('DOMContentLoaded', () => {
 function cpuMove() {
   console.log('[CPU] cpuMove called.');
   // If forced by Control perk, obey
-  if (activePerks[1]?.type === 'Control' && activePerks[1].target === 2) {
-    console.log('[CPU] Forced by Control perk to play', activePerks[1].forcedCard);
-    selectCard(activePerks[1].forcedCard);
-    return;
+  if ((activePerks[1]?.type === 'Control' && activePerks[1].target === 2) ||
+      (activePerks[2]?.type === 'Control' && activePerks[2].target === 2)) {
+    let forcedCard = (activePerks[1]?.type === 'Control' && activePerks[1].target === 2) ? activePerks[1].forcedCard : activePerks[2].forcedCard;
+    if (!lockedCards[2][forcedCard]) {
+      selectCard(forcedCard);
+      return;
+    } else {
+      // If forced card is locked, remove the control perk and proceed as normal
+      if (activePerks[1]?.type === 'Control' && activePerks[1].target === 2) activePerks[1] = null;
+      if (activePerks[2]?.type === 'Control' && activePerks[2].target === 2) activePerks[2] = null;
+      updatePlayerUI();
+    }
   }
   // Get available cards
   const available = ['ATTACK', 'DEFEND', 'SUBMIT', 'TRAP', 'WILD'].filter(card => {

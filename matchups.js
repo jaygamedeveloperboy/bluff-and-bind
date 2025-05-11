@@ -87,11 +87,11 @@ function evaluateMatchup(p1, p2, state) {
     'WILD': ['SUBMIT']
   };
   const normalCounters = {
+    'WILD': ['ATTACK', 'DEFEND', 'TRAP'],
     'ATTACK': ['TRAP', 'WILD'],
     'DEFEND': ['TRAP', 'WILD'],
     'SUBMIT': ['TRAP', 'WILD'],
-    'TRAP': ['SUBMIT', 'WILD'],
-    'WILD': ['DEFEND', 'TRAP', 'ATTACK']
+    'TRAP': ['SUBMIT', 'WILD']
   };
 
   // Helper for next difficulty
@@ -106,8 +106,6 @@ function evaluateMatchup(p1, p2, state) {
   let wildWin = false;
   let wildWinner = null;
   if (p1 === p2) {
-    result.instructions = `${p1 === 'SUBMIT' ? 'Both players must be punished!' : 'Stalemate. Nothing happens.'}`;
-    // Double Wild: both get punished and both get a perk
     if (p1 === 'WILD') {
       result.instructions = 'Both players played WILD! Both lose a token, both are punished, and both gain a perk!';
       result.tokens[1] = Math.max(0, result.tokens[1] - 1);
@@ -123,6 +121,10 @@ function evaluateMatchup(p1, p2, state) {
       const randomPerk2 = availablePerks[Math.floor(Math.random() * availablePerks.length)];
       result.perks[1] = grantPerk(result.perks[1], randomPerk1);
       result.perks[2] = grantPerk(result.perks[2], randomPerk2);
+    } else if (p1 === 'SUBMIT') {
+      result.instructions = 'Both players must be punished!';
+    } else {
+      result.instructions = 'Stalemate. Nothing happens.';
     }
   } else {
     // Check strong counters
