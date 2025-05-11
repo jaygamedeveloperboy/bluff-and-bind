@@ -54,32 +54,52 @@
   <div id="tutorial-screen" class="hidden">
     <h2>How to Play Bluff & Bind</h2>
     <div class="tutorial-content">
-      <h3>Game Rules</h3>
-      <ul>
-        <li>Each player starts with tokens based on difficulty</li>
-        <li>Choose one of five actions each round: Attack, Defend, Submit, Trap, or Wild</li>
-        <li>Cards become locked after use for 2 rounds</li>
-        <li>Wildcards can only be used once per game</li>
-        <li>Last player with tokens wins!</li>
-        <li><b>Every time a player loses two tokens, they must remove an article of clothing.</b></li>
-      </ul>
-      
-      <h3>Card Effects</h3>
-      <ul>
-        <li>Attack: Strong against Submit, weak against Trap</li>
-        <li>Defend: Strong against Attack, weak against Trap</li>
-        <li>Submit: Strong against Trap, weak against Attack. <b>If you win a round with Submit, you gain a random perk!</b></li>
-        <li>Trap: Strong against Attack/Defend, weak against Submit</li>
-        <li>Wild: Trumps every card. <b>If Wild beats Submit, it is a strong win (perk and higher punishment). Against Attack, Defend, or Trap, Wild wins as a normal win.</b> If both players play Wild, both lose a token, are punished, and both gain a random perk.</li>
-      </ul>
-
-      <h3>Perks</h3>
-      <ul>
-        <li>Control: Force opponent's next move</li>
-        <li>Reverse: Reverse the outcome of a round</li>
-        <li>Trap: Set a trap that activates on opponent's next move</li>
-      </ul>
-      <p style="margin-top:10px;"><b>How to get perks:</b> Win a round with <b>Submit</b> to gain a random perk. If both players play <b>Wild</b> in the same round, both gain a random perk.</p>
+      <ol>
+        <li><b>Setup:</b> Each player starts with tokens based on the chosen difficulty. Decide who is Player 1 and Player 2 (or play vs CPU!).</li>
+        <li><b>Objective:</b> Be the last player with tokens remaining.</li>
+        <li><b>Taking Turns:</b> Each round, both players secretly choose one of five actions:</li>
+        <ul style="margin-bottom: 0.5em;">
+          <li><b>Attack</b> 🗡️</li>
+          <li><b>Defend</b> 🛡️</li>
+          <li><b>Submit</b> 🙇</li>
+          <li><b>Trap</b> 🕸️</li>
+          <li><b>Wild</b> 🎲 (once per game)</li>
+        </ul>
+        <li>After both have chosen, reveal your cards!</li>
+        <li><b>Card Effects:</b></li>
+        <ul style="margin-bottom: 0.5em;">
+          <li><b>Attack:</b> Strong win against Submit. <b>Strong loss</b> against Defend. <b>Normal loss</b> against Trap.</li>
+          <li><b>Defend:</b> Strong win against Attack. <b>Normal win</b> against Wild. <b>Normal loss</b> against Trap. <b>Normal loss</b> against Submit.</li>
+          <li><b>Submit:</b> Strong win against Trap. <b>Normal loss</b> against Defend. <b>Strong loss</b> against Attack. <i>Win with Submit to earn a random perk!</i></li>
+          <li><b>Trap:</b> Strong win against Attack and Defend. <b>Normal loss</b> against Submit.</li>
+          <li><b>Wild:</b> Wins against everything. <b>Strong win</b> against Submit (perk + higher punishment). <b>Normal win</b> against Attack, Defend, or Trap. If both play Wild, both lose a token, are punished, and gain a perk.</li>
+        </ul>
+        <li><b>Card Locking:</b> If you play the same card twice in a row, that card becomes locked and cannot be played on your next turn. After skipping one turn, the card unlocks and can be used again.</li>
+        <li><b>Losing Tokens & Punishments:</b></li>
+        <ul style="margin-bottom: 0.5em;">
+          <li>If you lose a round, you may lose a token (sometimes half a token).</li>
+          <li>Every time you lose two tokens, you must remove an article of clothing.</li>
+          <li>If you don't want to do a punishment, you can forfeit it by losing a token instead.</li>
+        </ul>
+        <li><b>Perks:</b> Win a round with Submit, or if both play Wild, and you'll get a random perk:</li>
+        <ul style="margin-bottom: 0.5em;">
+          <li><b>Control:</b> Force your opponent's next move.</li>
+          <li><b>Reverse:</b> Reverse the outcome of a round.</li>
+          <li><b>Trap:</b> Set a trap for your opponent's next move.</li>
+        </ul>
+        <li><b>Winning the Game:</b> The last player with tokens wins! If both lose their last token in the same round, it's a draw.</li>
+      </ol>
+      <div style="margin-top:12px;">
+        <b>Quick Example Round:</b>
+        <ol>
+          <li>Both players secretly pick a card.</li>
+          <li>Reveal cards and resolve the outcome.</li>
+          <li>Apply any token loss, perks, or punishments.</li>
+          <li>If you played the same card twice in a row, it's now locked for your next turn.</li>
+          <li>Repeat until one player runs out of tokens.</li>
+        </ol>
+      </div>
+      <div style="margin-top:10px;"><b>Tip:</b> Bluff, strategize, and watch your opponent's patterns. Save your Wild card for a crucial moment!</div>
     </div>
     <button onclick="hideTutorial()">Start Playing</button>
   </div>

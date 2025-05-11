@@ -279,21 +279,29 @@ button:hover {
   margin: 20px 0;
 }
 
+.tutorial-content ol {
+  list-style-type: decimal;
+  margin-left: 1.5em;
+}
+
+.tutorial-content ol > li {
+  list-style-type: decimal;
+  position: static;
+}
+
+.tutorial-content ol > li::before {
+  content: none !important;
+  display: none !important;
+}
+
+.tutorial-content ol ol > li::before {
+  content: none !important;
+  display: none !important;
+}
+
 .tutorial-content ul {
-  list-style-type: none;
-  padding-left: 20px;
-}
-
-.tutorial-content li {
-  margin: 10px 0;
-  position: relative;
-}
-
-.tutorial-content li:before {
-  content: "•";
-  color: #ffd700;
-  position: absolute;
-  left: -20px;
+  list-style-type: disc;
+  margin-left: 2em;
 }
 
 /* Game History */

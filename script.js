@@ -169,21 +169,24 @@ function updatePlayerUI() {
   // Control Perk: If the current player is being controlled, only enable the forced card
   let controlActive = false;
   let forcedCard = null;
-  if (activePerks[1]?.type === 'Control' && activePerks[1].target === 1 && playerTurn === 1) {
+  let controlledPlayer = null;
+  if (activePerks[1]?.type === 'Control' && activePerks[1].target === 1) {
     controlActive = true;
     forcedCard = activePerks[1].forcedCard;
-  } else if (activePerks[2]?.type === 'Control' && activePerks[2].target === 2 && playerTurn === 2) {
+    controlledPlayer = 1;
+  } else if (activePerks[2]?.type === 'Control' && activePerks[2].target === 2) {
     controlActive = true;
     forcedCard = activePerks[2].forcedCard;
+    controlledPlayer = 2;
   }
   if (controlActive) {
-    const grid = document.querySelector(`#player${playerTurn}-card-grid`);
+    const grid = document.querySelector(`#player${controlledPlayer}-card-grid`);
     const cards = grid.querySelectorAll('.card');
     cards.forEach(card => {
       const img = card.querySelector('img');
       if (!img) return;
       const cardType = img.alt.toUpperCase();
-      if (cardType === forcedCard && !lockedCards[playerTurn][cardType]) {
+      if (cardType === forcedCard && !lockedCards[controlledPlayer][cardType]) {
         card.classList.remove('locked');
         img.onclick = () => selectCard(cardType);
       } else {
@@ -191,6 +194,11 @@ function updatePlayerUI() {
         img.onclick = null;
       }
     });
+    // If the controlled player has already picked, override their choice
+    if (choices[controlledPlayer] && choices[controlledPlayer] !== forcedCard) {
+      choices[controlledPlayer] = forcedCard;
+      alert(`Player ${controlledPlayer}'s card was changed to ${forcedCard} by the Control perk!`);
+    }
   } else {
     updateLockedCards(1);
     updateLockedCards(2);
@@ -245,7 +253,14 @@ function usePerk(player, perkType) {
           target: opponent
         };
         used = true;
-        alert(`Player ${opponent} will be forced to play ${forcedCard.toUpperCase()} next turn!`);
+        // If opponent has already chosen, override their choice immediately
+        if (choices[opponent]) {
+          choices[opponent] = forcedCard.toUpperCase();
+          alert(`Player ${opponent}'s card was changed to ${forcedCard.toUpperCase()} by the Control perk!`);
+          updatePlayerUI();
+        } else {
+          alert(`Player ${opponent} will be forced to play ${forcedCard.toUpperCase()} next turn!`);
+        }
       }
       break;
       
@@ -303,10 +318,17 @@ function selectCard(card) {
   let cardType = card.toUpperCase();
   if (cardType === "WILDCARD") cardType = "WILD";
 
-  // Control Perk: Only allow forced card
-  if ((activePerks[1]?.type === 'Control' && activePerks[1].target === playerTurn && playerTurn === 1) ||
-      (activePerks[2]?.type === 'Control' && activePerks[2].target === playerTurn && playerTurn === 2)) {
-    let forcedCard = (activePerks[1]?.type === 'Control' && activePerks[1].target === playerTurn) ? activePerks[1].forcedCard : activePerks[2].forcedCard;
+  // Control Perk: Only allow forced card for the controlled player, regardless of turn
+  let controlled = null;
+  let forcedCard = null;
+  if (activePerks[1]?.type === 'Control' && activePerks[1].target === 1) {
+    controlled = 1;
+    forcedCard = activePerks[1].forcedCard;
+  } else if (activePerks[2]?.type === 'Control' && activePerks[2].target === 2) {
+    controlled = 2;
+    forcedCard = activePerks[2].forcedCard;
+  }
+  if (controlled && playerTurn === controlled) {
     if (cardType !== forcedCard) {
       alert(`You are being controlled! You must play ${forcedCard}.`);
       return;
@@ -543,7 +565,13 @@ function showResult() {
     if (pendingPunishment && pendingPunishment.length === 2) {
       punishmentChoiceHTML = `<div id='punishment-choice'><b>Player ${winner}, choose a punishment for Player ${loser}:</b><br>
         <button onclick='assignPunishment(${loser}, 0)'>${pendingPunishment[0]}</button>
-        <button onclick='assignPunishment(${loser}, 1)'>${pendingPunishment[1]}</button>
+        <button onclick='assignPunishment(${loser}, 1)'>${pendingPunishment[1]}</button><br>
+        <button style='margin-top:8px;color:#fff;background:#ff6b6b;' onclick='forfeitPunishment(${loser})'>Forfeit Punishment (Lose 1 Token)</button>
+      </div>`;
+    } else if (pendingPunishment && pendingPunishment.length > 0) {
+      punishmentChoiceHTML = `<div id='punishment-choice'><b>Player ${loser}, you have a punishment:</b><br>
+        <span>${pendingPunishment.join(', ')}</span><br>
+        <button style='margin-top:8px;color:#fff;background:#ff6b6b;' onclick='forfeitPunishment(${loser})'>Forfeit Punishment (Lose 1 Token)</button>
       </div>`;
     }
   }
@@ -576,8 +604,15 @@ function showResult() {
     const winner = tokens[1] === 0 ? 2 : 1;
     const loser = tokens[1] === 0 ? 1 : 2;
     const totalClothingLost = Math.floor(initialTokens / 2);
+    // Count punishments for each player
+    let p1Punishments = 0;
+    let p2Punishments = 0;
+    gameHistory.forEach(entry => {
+      if (entry.punishments[1] && entry.punishments[1].length > 0) p1Punishments++;
+      if (entry.punishments[2] && entry.punishments[2].length > 0) p2Punishments++;
+    });
     setTimeout(() => {
-      alert(`Game Over! Player ${winner} wins!\nPlayer ${loser} has lost all ${totalClothingLost} items of clothing!\nFinal punishment: ${formatPunishments(result.punishments[loser])}`);
+      alert(`Game Over! Player ${winner} wins!\nPlayer ${loser} has lost all ${totalClothingLost} items of clothing!\nFinal punishment: ${formatPunishments(result.punishments[loser])}\n\nPunishments received:\nPlayer 1: ${p1Punishments}\nPlayer 2: ${p2Punishments}`);
       returnHome();
     }, 1000);
   }
@@ -594,6 +629,23 @@ function assignPunishment(loser, idx) {
   // Update the result display
   document.getElementById("punishment-choice-area").innerHTML = `<b>Punishment chosen:</b> ${chosen}`;
   document.getElementById(`player${loser}-result-punishment`).innerHTML = `Punishment: <span>${chosen}</span>`;
+}
+
+function forfeitPunishment(player) {
+  // Remove the punishment for this player in the last result
+  const lastResult = gameHistory[gameHistory.length - 1];
+  lastResult.punishments[player] = [];
+  // Subtract a token (minimum 0)
+  tokens[player] = Math.max(0, tokens[player] - 1);
+  lastResult.tokens[player] = tokens[player];
+  // Log the forfeit in the result display
+  document.getElementById(`player${player}-result-punishment`).innerHTML = `<span style='color:#aaa;font-style:italic;'>Punishment forfeited (lost 1 token)</span>`;
+  document.getElementById("punishment-choice-area").innerHTML = `<b>Punishment forfeited!</b> Player ${player} lost 1 token instead.`;
+  updateGameHistory();
+  // Optionally, update token display
+  document.getElementById(`player${player}-result-tokens`).innerHTML = `<div style='font-size:0.95em;color:#aaa;margin-bottom:2px;'>Played: <b>${choices[player]}</b></div>` +
+    `Tokens: <img src="images/token.png" class="token-icon" style="width:22px;vertical-align:middle;">`.repeat(tokens[player]) +
+    ` <span style='font-size:0.9em;opacity:0.7;'>(${tokens[player]})</span>`;
 }
 
 function updateGameHistory() {
