@@ -36,6 +36,7 @@ function hideTutorial() {
 
 function startGame(mode) {
   gameMode = mode;
+  document.getElementById("mode").innerText = `Mode: ${gameMode}`;
   const modeConfig = GAME_MODES[mode];
   
   // Store selected emojis
@@ -71,11 +72,31 @@ function startGame(mode) {
 
 function returnHome() {
   if (confirm("Are you sure you want to return to the home screen? All progress will be lost.")) {
+    // Reset all game state variables
+    gameMode = '';
+    playerTurn = 1;
+    choices = {};
+    perks = { 1: [], 2: [] };
+    tokens = { 1: 5, 2: 5 };
+    wildUsed = { 1: false, 2: false };
+    lockedCards = { 1: {}, 2: {} };
+    cardPlayCounts = { 1: {}, 2: {} };
+    gameHistory = [];
+    consecutiveWins = { 1: 0, 2: 0 };
+    playerEmojis = { 1: '🐼', 2: '🐼' };
+    activePerks = { 1: null, 2: null };
+    cpuEnabled = false;
+    playerHistory = [];
+    cpuHistory = [];
+    cpuWeights = { 'ATTACK': 1, 'DEFEND': 1, 'SUBMIT': 1, 'TRAP': 1, 'WILD': 0.5 };
+
     // Hide all main screens except home
     document.getElementById("tutorial-screen").classList.add("hidden");
     document.getElementById("game-screen").classList.add("hidden");
     document.getElementById("home-screen").classList.remove("hidden");
-    location.reload();
+
+    // Reset mode label
+    document.getElementById("mode").innerText = "Mode:";
   }
 }
 
@@ -356,6 +377,8 @@ function selectCard(card) {
 }
 
 function showResult() {
+  // Always update the mode label for results screen
+  document.getElementById("mode").innerText = `Mode: ${gameMode}`;
   console.log('showResult called'); // Debug log
   const p1 = choices[1];
   const p2 = choices[2];
