@@ -112,10 +112,11 @@ function evaluateMatchup(p1, p2, state) {
       result.instructions = 'Both players played WILD! Both lose a token, both are punished, and both gain a perk!';
       result.tokens[1] = Math.max(0, result.tokens[1] - 1);
       result.tokens[2] = Math.max(0, result.tokens[2] - 1);
-      // Both get a punishment (use next difficulty)
+      // Both get the same punishment (use next difficulty)
       const punishmentDiff = nextDifficulty[state.gameMode] || state.gameMode;
-      result.punishments[1] = getRandomPunishment(punishmentDiff, 2);
-      result.punishments[2] = getRandomPunishment(punishmentDiff, 2);
+      const [punishment] = getRandomPunishment(punishmentDiff, 1);
+      result.punishments[1] = [punishment];
+      result.punishments[2] = [punishment];
       // Both get a random perk
       const availablePerks = ['Control', 'Reverse', 'Trap'];
       const randomPerk1 = availablePerks[Math.floor(Math.random() * availablePerks.length)];

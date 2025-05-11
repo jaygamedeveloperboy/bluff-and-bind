@@ -91,17 +91,27 @@ function updatePlayerUI() {
     'Trap': '🪤'
   };
   
-  const formatPerks = (perkList) => {
-    if (perkList.length === 0) return "None";
-    return perkList.map(perk => `${perkIcons[perk]} ${perk}`).join(", ");
+  // Show clickable perk buttons under Perks: label
+  const updatePerkBar = (player) => {
+    const perkBar = document.getElementById(`player${player}-perks`);
+    const container = document.createElement('span');
+    if (perks[player].length === 0) {
+      perkBar.innerHTML = '<span style="color:#aaa;font-style:italic;">None</span>';
+      return;
+    }
+    perks[player].forEach(perk => {
+      const button = document.createElement('button');
+      button.className = 'perk-button';
+      button.innerHTML = `${perkIcons[perk]} ${perk}`;
+      button.onclick = () => usePerk(player, perk);
+      if (player !== playerTurn) button.disabled = true;
+      container.appendChild(button);
+    });
+    perkBar.innerHTML = '';
+    perkBar.appendChild(container);
   };
-  
-  document.getElementById("player1-perks").innerHTML = formatPerks(perks[1]);
-  document.getElementById("player2-perks").innerHTML = formatPerks(perks[2]);
-
-  // Update perk buttons
-  updatePerkButtons(1);
-  updatePerkButtons(2);
+  updatePerkBar(1);
+  updatePerkBar(2);
 
   // Disable Player 2's card grid if CPU is active and it's Player 2's turn
   const p2Grid = document.getElementById('player2-card-grid');
@@ -319,6 +329,7 @@ function showResult() {
     activePerks[2] = null;
   }
 
+  const prevTokens = { 1: tokens[1], 2: tokens[2] };
   const result = evaluateMatchup(p1, p2, {
     perks,
     tokens,
@@ -341,6 +352,16 @@ function showResult() {
 
   // Ensure punishments is always defined
   result.punishments = result.punishments || {1: [], 2: []};
+
+  // Clothing removal message
+  const lostTokens1 = prevTokens[1] - result.tokens[1];
+  const lostTokens2 = prevTokens[2] - result.tokens[2];
+  if (lostTokens1 >= 2) {
+    result.instructions += ' Player 1: Remove an article of clothing!';
+  }
+  if (lostTokens2 >= 2) {
+    result.instructions += ' Player 2: Remove an article of clothing!';
+  }
 
   tokens = result.tokens;
   perks = result.perks;
