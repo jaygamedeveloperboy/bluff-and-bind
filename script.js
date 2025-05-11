@@ -14,6 +14,7 @@ let cpuEnabled = false;
 let playerHistory = [];
 let cpuHistory = [];
 let cpuWeights = { 'ATTACK': 1, 'DEFEND': 1, 'SUBMIT': 1, 'TRAP': 1, 'WILD': 0.5 };
+let customPunishments = [];
 
 const GAME_MODES = {
   'Easy': { tokens: 14, intensity: 1 },    // 7 pieces of clothing
@@ -51,8 +52,12 @@ function startGame(mode) {
   cpuHistory = [];
   cpuWeights = { 'ATTACK': 1, 'DEFEND': 1, 'SUBMIT': 1, 'TRAP': 1, 'WILD': 0.5 };
 
+  // Get clothing values from dropdowns (tokens = clothing)
+  const p1Clothing = parseInt(document.getElementById('player1-clothing')?.value || '3', 10);
+  const p2Clothing = parseInt(document.getElementById('player2-clothing')?.value || '3', 10);
+
   // Reset game state
-  tokens = { 1: modeConfig.tokens, 2: modeConfig.tokens };
+  tokens = { 1: p1Clothing, 2: p2Clothing };
   perks = { 1: [], 2: [] };
   wildUsed = { 1: false, 2: false };
   choices = {};
@@ -452,14 +457,17 @@ function showResult() {
   // Ensure punishments is always defined
   result.punishments = result.punishments || {1: [], 2: []};
 
-  // Clothing removal message
-  const lostTokens1 = prevTokens[1] - result.tokens[1];
-  const lostTokens2 = prevTokens[2] - result.tokens[2];
-  if (lostTokens1 >= 2) {
-    result.instructions += ' Player 1: Remove an article of clothing!';
+  // Clothing removal message (for every full token lost)
+  const initialTokens = GAME_MODES[gameMode].tokens;
+  const prevClothing1 = Math.floor(initialTokens - prevTokens[1]);
+  const prevClothing2 = Math.floor(initialTokens - prevTokens[2]);
+  const currClothing1 = Math.floor(initialTokens - result.tokens[1]);
+  const currClothing2 = Math.floor(initialTokens - result.tokens[2]);
+  if (currClothing1 > prevClothing1) {
+    result.instructions += ` Player 1: Remove ${currClothing1 - prevClothing1} piece${currClothing1 - prevClothing1 > 1 ? 's' : ''} of clothing!`;
   }
-  if (lostTokens2 >= 2) {
-    result.instructions += ' Player 2: Remove an article of clothing!';
+  if (currClothing2 > prevClothing2) {
+    result.instructions += ` Player 2: Remove ${currClothing2 - prevClothing2} piece${currClothing2 - prevClothing2 > 1 ? 's' : ''} of clothing!`;
   }
 
   tokens = result.tokens;
@@ -496,7 +504,6 @@ function showResult() {
   document.getElementById("player2").classList.add("hidden");
 
   // Calculate clothing removal
-  const initialTokens = GAME_MODES[gameMode].tokens;
   const p1ClothingLost = Math.floor((initialTokens - tokens[1]) / 2);
   const p2ClothingLost = Math.floor((initialTokens - tokens[2]) / 2);
 
@@ -580,10 +587,11 @@ function showResult() {
   // 6. Punishment choice area
   let p1Punishment = formatPunishments(result.punishments[1]);
   let p2Punishment = formatPunishments(result.punishments[2]);
-  if (punishmentChoiceHTML && loser === 1) {
+  // Show 'Choose...' if the player has a pending punishment (any length)
+  if ((result.punishments[1] && result.punishments[1].length > 0) && loser === 1) {
     p1Punishment = "<span style='color:#aaa;font-style:italic;'>Choose...</span>";
   }
-  if (punishmentChoiceHTML && loser === 2) {
+  if ((result.punishments[2] && result.punishments[2].length > 0) && loser === 2) {
     p2Punishment = "<span style='color:#aaa;font-style:italic;'>Choose...</span>";
   }
   document.getElementById("player1-result-punishment").innerHTML = `Punishment: <span>${p1Punishment}</span>`;
@@ -611,6 +619,17 @@ function showResult() {
       if (entry.punishments[1] && entry.punishments[1].length > 0) p1Punishments++;
       if (entry.punishments[2] && entry.punishments[2].length > 0) p2Punishments++;
     });
+    // Upgrade final punishment to next difficulty if possible
+    const nextDifficulty = {
+      'Easy': 'Medium',
+      'Medium': 'Hard',
+      'Hard': 'Extreme',
+      'Extreme': 'Extreme'
+    };
+    const finalDiff = nextDifficulty[gameMode] || gameMode;
+    if (result.punishments[loser] && result.punishments[loser].length > 0) {
+      result.punishments[loser] = getRandomPunishment(finalDiff, 2);
+    }
     setTimeout(() => {
       alert(`Game Over! Player ${winner} wins!\nPlayer ${loser} has lost all ${totalClothingLost} items of clothing!\nFinal punishment: ${formatPunishments(result.punishments[loser])}\n\nPunishments received:\nPlayer 1: ${p1Punishments}\nPlayer 2: ${p2Punishments}`);
       returnHome();
@@ -642,10 +661,10 @@ function forfeitPunishment(player) {
   document.getElementById(`player${player}-result-punishment`).innerHTML = `<span style='color:#aaa;font-style:italic;'>Punishment forfeited (lost 1 token)</span>`;
   document.getElementById("punishment-choice-area").innerHTML = `<b>Punishment forfeited!</b> Player ${player} lost 1 token instead.`;
   updateGameHistory();
-  // Optionally, update token display
-  document.getElementById(`player${player}-result-tokens`).innerHTML = `<div style='font-size:0.95em;color:#aaa;margin-bottom:2px;'>Played: <b>${choices[player]}</b></div>` +
-    `Tokens: <img src="images/token.png" class="token-icon" style="width:22px;vertical-align:middle;">`.repeat(tokens[player]) +
-    ` <span style='font-size:0.9em;opacity:0.7;'>(${tokens[player]})</span>`;
+  // Update token display to match main results logic
+  const tokenIcon = '<img src="images/token.png" class="token-icon" style="width:22px;vertical-align:middle;">';
+  document.getElementById(`player${player}-result-tokens`).innerHTML =
+    `Tokens: ${tokenIcon.repeat(tokens[player])} <span style='font-size:0.9em;opacity:0.7;'>(${tokens[player]})</span>`;
 }
 
 function updateGameHistory() {
@@ -709,6 +728,55 @@ window.addEventListener('DOMContentLoaded', () => {
       this.classList.add('selected');
     });
   });
+
+  // Party Mode and CPU toggle logic
+  const cpuToggle = document.getElementById('cpu-toggle');
+  const partyToggle = document.getElementById('party-toggle');
+  const customArea = document.getElementById('custom-punishments-area');
+  if (cpuToggle && partyToggle) {
+    cpuToggle.addEventListener('change', function() {
+      if (cpuToggle.checked) {
+        partyToggle.checked = false;
+        partyToggle.disabled = true;
+        if (customArea) customArea.style.display = 'none';
+      } else {
+        partyToggle.disabled = false;
+      }
+    });
+    partyToggle.addEventListener('change', function() {
+      if (partyToggle.checked) {
+        cpuToggle.checked = false;
+        cpuToggle.disabled = true;
+        if (customArea) customArea.style.display = '';
+      } else {
+        cpuToggle.disabled = false;
+        if (customArea) customArea.style.display = 'none';
+      }
+    });
+    // On load, ensure only one is enabled if both are checked
+    if (cpuToggle.checked) { partyToggle.disabled = true; if (customArea) customArea.style.display = 'none'; }
+    if (partyToggle.checked) { cpuToggle.disabled = true; if (customArea) customArea.style.display = ''; }
+  }
+
+  // Custom punishment logic
+  const addBtn = document.getElementById('add-custom-punishment-btn');
+  const input = document.getElementById('custom-punishment-input');
+  const list = document.getElementById('custom-punishments-list');
+  if (addBtn && input && list) {
+    addBtn.addEventListener('click', function() {
+      const value = input.value.trim();
+      if (!value) return;
+      if (customPunishments.includes(value)) return;
+      customPunishments.push(value);
+      const li = document.createElement('li');
+      li.textContent = value;
+      list.appendChild(li);
+      input.value = '';
+    });
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addBtn.click();
+    });
+  }
 });
 
 function cpuMove() {
@@ -808,4 +876,307 @@ function getCounterCard(card, available) {
   }
   // Otherwise, pick a random available card
   return available[Math.floor(Math.random()*available.length)];
+}
+
+// --- Punishment Wheel Logic ---
+function getPunishmentSummary(punishment) {
+  // Remove leading articles and take first 2 significant words
+  let words = punishment.replace(/^(to |a |an |the |be |and |or |if |for |with |by |on |in |at |of |from |as |is |are |was |were |has |have |had |do |does |did |will |would |can |could |should |may |might |must )/i, '').split(' ');
+  // Remove punctuation from start/end of each word, but keep spaces
+  words = words.map(w => w.replace(/^[^\w\d]+|[^\w\d]+$/g, ''));
+  return words.slice(0, 2).join(' ');
+}
+
+function showPunishmentWheel(punishments, onResult) {
+  const embed = document.getElementById('punishment-wheel-embed');
+  const canvas = document.getElementById('punishment-wheel-canvas');
+  const spinBtn = document.getElementById('spin-punishment-wheel-btn');
+  const resultDiv = document.getElementById('punishment-wheel-result');
+  if (!embed || !canvas || !spinBtn || !resultDiv) return;
+
+  // Build summaries for display
+  const summaries = punishments.map(getPunishmentSummary);
+
+  let spinning = false;
+  let selectedIndex = null;
+  let angle = 0;
+  let spinTimeout = null;
+
+  function drawWheel(highlightIdx = null) {
+    const ctx = canvas.getContext('2d');
+    const size = canvas.width;
+    const num = punishments.length;
+    const arc = (2 * Math.PI) / num;
+    ctx.clearRect(0, 0, size, size);
+    for (let i = 0; i < num; i++) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(size/2, size/2);
+      ctx.arc(size/2, size/2, size/2-8, i*arc+angle, (i+1)*arc+angle, false);
+      ctx.closePath();
+      if (highlightIdx === i) {
+        ctx.fillStyle = '#e6be39';
+      } else {
+        ctx.fillStyle = (i % 2 === 0) ? '#141414' : '#a62a28';
+      }
+      ctx.fill();
+      ctx.strokeStyle = '#222';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.save();
+      ctx.translate(size/2, size/2);
+      ctx.rotate(i*arc + arc/2 + angle);
+      ctx.textAlign = 'right';
+      ctx.font = 'bold 16px Merriweather, serif';
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = '#000';
+      ctx.shadowBlur = 2;
+      ctx.fillText(summaries[i], size/2-24, 8);
+      ctx.restore();
+      ctx.restore();
+    }
+    // Draw pointer (at 3 o'clock, right side)
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(size-20, size/2);
+    ctx.lineTo(size-40, size/2-16);
+    ctx.lineTo(size-40, size/2+16);
+    ctx.closePath();
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = '#fff';
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function spinWheel() {
+    if (spinning) return;
+    spinning = true;
+    resultDiv.textContent = '';
+    let velocity = Math.random() * 0.25 + 0.35;
+    let decel = 0.995 + Math.random()*0.002;
+    function animate() {
+      angle += velocity;
+      velocity *= decel;
+      drawWheel();
+      if (velocity > 0.01) {
+        spinTimeout = requestAnimationFrame(animate);
+      } else {
+        angle = angle % (2*Math.PI);
+        const num = punishments.length;
+        const arc = (2 * Math.PI) / num;
+        let selected = Math.floor(((2*Math.PI - angle) % (2*Math.PI)) / arc) % num;
+        selectedIndex = selected;
+        angle = (2*Math.PI - (selectedIndex * arc) - arc/2) % (2*Math.PI);
+        drawWheel(selectedIndex);
+        // Show full punishment text in result
+        resultDiv.textContent = `Selected: ${punishments[selectedIndex]}`;
+        spinning = false;
+        if (onResult) onResult(punishments[selectedIndex]);
+      }
+    }
+    animate();
+  }
+
+  // Setup UI
+  drawWheel();
+  resultDiv.textContent = '';
+  embed.classList.remove('hidden');
+  spinBtn.disabled = false;
+
+  spinBtn.onclick = () => {
+    if (!spinning) spinWheel();
+  };
+}
+
+// --- Integrate with game flow ---
+const originalShowResult = showResult;
+showResult = function() {
+  const partyToggle = document.getElementById('party-toggle');
+  const isPartyMode = partyToggle && partyToggle.checked;
+  originalShowResult.apply(this, arguments);
+  const lastResult = gameHistory[gameHistory.length-1];
+  const embed = document.getElementById('punishment-wheel-embed');
+  const choiceArea = document.getElementById('punishment-choice-area');
+  if (embed) embed.classList.add('hidden');
+  if (!isPartyMode || !lastResult) return;
+  // Only show the wheel if a punishment is actually pending
+  if ((lastResult.punishments[1] && lastResult.punishments[1].length > 0) || (lastResult.punishments[2] && lastResult.punishments[2].length > 0)) {
+    // Build pool: 20 random unique punishments from difficulty + custom
+    let pool = [];
+    let difficulty = gameMode;
+    if (typeof PUNISHMENTS !== 'undefined' && PUNISHMENTS[difficulty]) {
+      let base = Array.from(PUNISHMENTS[difficulty]);
+      // Remove duplicates with custom
+      let all = Array.from(new Set([...base, ...customPunishments]));
+      // Shuffle and pick 20
+      for (let i = all.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [all[i], all[j]] = [all[j], all[i]];
+      }
+      pool = all.slice(0, 20);
+    } else {
+      pool = Array.from(new Set([...customPunishments]));
+    }
+    // Fallback: if less than 20, use all available
+    if (pool.length < 1) return;
+    // Hide standard punishment choice UI
+    if (choiceArea) choiceArea.innerHTML = '';
+    showPunishmentWheel(pool, function(selected) {
+      if (lastResult.punishments[1] && lastResult.punishments[1].length > 0) lastResult.punishments[1] = [selected];
+      if (lastResult.punishments[2] && lastResult.punishments[2].length > 0) lastResult.punishments[2] = [selected];
+      updateGameHistory();
+    });
+  }
+};
+
+function evaluateMatchup(p1, p2, state) {
+  const result = {
+    summary: `Player 1 played: ${p1}\nPlayer 2 played: ${p2}`,
+    instructions: '',
+    tokens: { ...state.tokens },
+    perks: { ...state.perks },
+    consecutiveWins: { ...state.consecutiveWins },
+    punishments: { 1: [], 2: [] }
+  };
+
+  // Track tokens as decimals
+  let tokenLossP1 = 0;
+  let tokenLossP2 = 0;
+
+  // Define strong and normal counters
+  const strongCounters = {
+    'ATTACK': ['SUBMIT'],
+    'DEFEND': ['ATTACK'],
+    'SUBMIT': ['DEFEND'],
+    'TRAP': ['ATTACK'],
+    'WILD': ['SUBMIT']
+  };
+  const normalCounters = {
+    'WILD': ['ATTACK', 'DEFEND', 'TRAP'],
+    'ATTACK': ['TRAP', 'WILD'],
+    'DEFEND': ['TRAP', 'WILD'],
+    'SUBMIT': ['TRAP', 'WILD'],
+    'TRAP': ['SUBMIT', 'WILD']
+  };
+
+  // Helper for next difficulty
+  const nextDifficulty = {
+    'Easy': 'Medium',
+    'Medium': 'Hard',
+    'Hard': 'Extreme',
+    'Extreme': 'Extreme'
+  };
+
+  // Determine outcome
+  let wildWin = false;
+  let wildWinner = null;
+  if (p1 === p2) {
+    if (p1 === 'WILD') {
+      result.instructions = 'Both players played WILD! Both lose a token, both are punished, and both gain a perk!';
+      result.tokens[1] = Math.max(0, result.tokens[1] - 0.5); // was 1
+      result.tokens[2] = Math.max(0, result.tokens[2] - 0.5); // was 1
+      // Both get the same punishment (use next difficulty)
+      const punishmentDiff = nextDifficulty[state.gameMode] || state.gameMode;
+      const [punishment] = getRandomPunishment(punishmentDiff, 1);
+      result.punishments[1] = [punishment];
+      result.punishments[2] = [punishment];
+      // Both get a random perk
+      const availablePerks = ['Control', 'Reverse', 'Trap'];
+      const randomPerk1 = availablePerks[Math.floor(Math.random() * availablePerks.length)];
+      const randomPerk2 = availablePerks[Math.floor(Math.random() * availablePerks.length)];
+      result.perks[1] = grantPerk(result.perks[1], randomPerk1);
+      result.perks[2] = grantPerk(result.perks[2], randomPerk2);
+    } else if (p1 === 'SUBMIT') {
+      result.instructions = 'Both players must be punished!';
+    } else {
+      result.instructions = 'Stalemate. Nothing happens.';
+    }
+  } else {
+    // Check strong counters
+    if (strongCounters[p1] && strongCounters[p1].includes(p2)) {
+      if (p1 === 'WILD') {
+        wildWin = true; wildWinner = 1;
+        tokenLossP2 = 0.5; // was 1
+        result.instructions = 'Player 1 wins with WILD! Player 2 gives a token to Player 1.';
+      } else {
+        tokenLossP2 = 0.5; // was 1
+        result.instructions = 'Player 1 wins the round. Player 2 loses a token.';
+        // Award perk if won with SUBMIT
+        if (p1 === 'SUBMIT') {
+          const availablePerks = ['Control', 'Reverse', 'Trap'];
+          const randomPerk = availablePerks[Math.floor(Math.random() * availablePerks.length)];
+          result.perks[1] = grantPerk(result.perks[1], randomPerk);
+          result.instructions += ` Player 1 gains the ${randomPerk} perk!`;
+        }
+      }
+    } else if (strongCounters[p2] && strongCounters[p2].includes(p1)) {
+      if (p2 === 'WILD') {
+        wildWin = true; wildWinner = 2;
+        tokenLossP1 = 0.5; // was 1
+        result.instructions = 'Player 2 wins with WILD! Player 1 gives a token to Player 2.';
+      } else {
+        tokenLossP1 = 0.5; // was 1
+        result.instructions = 'Player 2 wins the round. Player 1 loses a token.';
+        // Award perk if won with SUBMIT
+        if (p2 === 'SUBMIT') {
+          const availablePerks = ['Control', 'Reverse', 'Trap'];
+          const randomPerk = availablePerks[Math.floor(Math.random() * availablePerks.length)];
+          result.perks[2] = grantPerk(result.perks[2], randomPerk);
+          result.instructions += ` Player 2 gains the ${randomPerk} perk!`;
+        }
+      }
+    } else if (normalCounters[p1] && normalCounters[p1].includes(p2)) {
+      tokenLossP2 = 0.25; // was 0.5
+      result.instructions = 'Player 1 wins the round. Player 2 loses half a token.';
+    } else if (normalCounters[p2] && normalCounters[p2].includes(p1)) {
+      tokenLossP1 = 0.25; // was 0.5
+      result.instructions = 'Player 2 wins the round. Player 1 loses half a token.';
+    } else {
+      result.instructions = 'No clear winner this round.';
+    }
+  }
+
+  // Store previous whole tokens for punishment check
+  const prevTokens1 = Math.floor(result.tokens[1]);
+  const prevTokens2 = Math.floor(result.tokens[2]);
+
+  // Apply token loss (track decimals)
+  if (wildWin && wildWinner === 1) {
+    result.tokens[2] = Math.max(0, result.tokens[2] - 0.5); // was 1
+    result.tokens[1] = Math.min(result.tokens[1] + 0.5, 99); // was 1
+  } else if (wildWin && wildWinner === 2) {
+    result.tokens[1] = Math.max(0, result.tokens[1] - 0.5); // was 1
+    result.tokens[2] = Math.min(result.tokens[2] + 0.5, 99); // was 1
+  } else {
+    result.tokens[1] = Math.max(0, (result.tokens[1] - tokenLossP1));
+    result.tokens[2] = Math.max(0, (result.tokens[2] - tokenLossP2));
+  }
+
+  // Assign punishments every time a player loses a hand (not just for full token loss)
+  let punishmentDiff = state.gameMode;
+  if (wildWin) {
+    punishmentDiff = nextDifficulty[state.gameMode] || state.gameMode;
+  }
+  if (tokenLossP1 > 0) {
+    result.punishments[1] = getRandomPunishment(punishmentDiff, 2);
+    console.log('Punishment assigned to Player 1:', result.punishments[1]);
+  }
+  if (tokenLossP2 > 0) {
+    result.punishments[2] = getRandomPunishment(punishmentDiff, 2);
+    console.log('Punishment assigned to Player 2:', result.punishments[2]);
+  }
+
+  // Update consecutive wins
+  if (tokenLossP2 > 0 && tokenLossP1 === 0) {
+    result.consecutiveWins[1]++;
+    result.consecutiveWins[2] = 0;
+  } else if (tokenLossP1 > 0 && tokenLossP2 === 0) {
+    result.consecutiveWins[2]++;
+    result.consecutiveWins[1] = 0;
+  } else {
+    result.consecutiveWins[1] = 0;
+    result.consecutiveWins[2] = 0;
+  }
+  return result;
 }

@@ -24,6 +24,22 @@
           <span class="emoji-circle" data-player="1" data-emoji="🍑">🍑</span>
           <span class="emoji-circle" data-player="1" data-emoji="🍆">🍆</span>
         </div>
+        <div style="margin-top:10px; text-align:center;">
+          <label style="font-weight:bold; font-size:1.1em; color:#a62a28;">Pieces of Clothing<br>
+            <select id="player1-clothing" style="margin-top:4px; font-size:1em; border-radius:6px; padding:4px 10px;">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+            </select>
+          </label>
+        </div>
       </div>
       <div>
         <div style="font-weight:bold; text-align:center; margin-bottom:4px;">Player 2 Emoji:</div>
@@ -34,12 +50,37 @@
           <span class="emoji-circle" data-player="2" data-emoji="🍑">🍑</span>
           <span class="emoji-circle" data-player="2" data-emoji="🍆">🍆</span>
         </div>
+        <div style="margin-top:10px; text-align:center;">
+          <label style="font-weight:bold; font-size:1.1em; color:#a62a28;">Pieces of Clothing<br>
+            <select id="player2-clothing" style="margin-top:4px; font-size:1em; border-radius:6px; padding:4px 10px;">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+            </select>
+          </label>
+        </div>
       </div>
     </div>
-    <div style="margin: 18px 0;">
+    <div style="margin: 18px 0; display: flex; justify-content: center; gap: 32px;">
       <label style="font-weight:bold; font-size:1.1em; color:#a62a28;">
         <input type="checkbox" id="cpu-toggle" style="transform:scale(1.3); margin-right:8px;"> Play vs CPU
       </label>
+      <label style="font-weight:bold; font-size:1.1em; color:#a62a28;">
+        <input type="checkbox" id="party-toggle" style="transform:scale(1.3); margin-right:8px;"> Party Mode 🎉
+      </label>
+    </div>
+    <div id="custom-punishments-area" style="display:none; margin: 18px 0;">
+      <div style="margin-bottom: 8px; font-weight: bold; color: #a62a28;">Add Custom Punishments (Party Mode Only):</div>
+      <input type="text" id="custom-punishment-input" placeholder="Enter a custom punishment..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid #a62a28; width: 60%; max-width: 340px;">
+      <button id="add-custom-punishment-btn" style="margin-left: 8px;">Add</button>
+      <ul id="custom-punishments-list" style="margin-top: 10px; text-align: left; max-width: 400px; margin-left: auto; margin-right: auto;"></ul>
     </div>
     <p>Select your game mode:</p>
     <div class="mode-buttons">
@@ -77,8 +118,9 @@
         <li><b>Card Locking:</b> If you play the same card twice in a row, that card becomes locked and cannot be played on your next turn. After skipping one turn, the card unlocks and can be used again.</li>
         <li><b>Losing Tokens & Punishments:</b></li>
         <ul style="margin-bottom: 0.5em;">
-          <li>If you lose a round, you may lose a token (sometimes half a token).</li>
-          <li>Every time you lose two tokens, you must remove an article of clothing.</li>
+          <li>If you lose a round, you may lose a token (sometimes half or quarter of a token).</li>
+          <li><b>Every time you lose a hand, you receive a punishment—regardless of how much token you lost.</b></li>
+          <li><b>You only remove an article of clothing when a full token is lost.</b></li>
           <li>If you don't want to do a punishment, you can forfeit it by losing a token instead.</li>
         </ul>
         <li><b>Perks:</b> Win a round with Submit, or if both play Wild, and you'll get a random perk:</li>
@@ -203,6 +245,12 @@
         </div>
       </div>
       <div id="punishment-choice-area"></div>
+      <div id="punishment-wheel-embed" class="hidden" style="margin: 0 auto 24px auto; max-width: 400px; text-align: center;">
+        <h2 style="color:#FFD700;text-align:center;margin-bottom:18px;">Punishment Wheel</h2>
+        <canvas id="punishment-wheel-canvas" width="340" height="340" style="display:block;margin:0 auto 18px auto;"></canvas>
+        <button id="spin-punishment-wheel-btn" style="font-size:1.2em;">Spin the Wheel</button>
+        <div id="punishment-wheel-result" style="margin-top:18px;font-size:1.2em;color:#FFD700;text-align:center;"></div>
+      </div>
       <div id="game-history" class="game-history">
         <h4>Game History</h4>
         <div id="history-list"></div>
