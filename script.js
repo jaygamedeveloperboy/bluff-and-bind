@@ -24,11 +24,13 @@ const GAME_MODES = {
 
 function showTutorial() {
   document.getElementById("home-screen").classList.add("hidden");
+  document.getElementById("game-screen").classList.add("hidden");
   document.getElementById("tutorial-screen").classList.remove("hidden");
 }
 
 function hideTutorial() {
   document.getElementById("tutorial-screen").classList.add("hidden");
+  document.getElementById("game-screen").classList.add("hidden");
   document.getElementById("home-screen").classList.remove("hidden");
 }
 
@@ -59,9 +61,9 @@ function startGame(mode) {
   gameHistory = [];
   consecutiveWins = { 1: 0, 2: 0 };
 
-  // Update UI
-  document.getElementById("mode").innerText = `Mode: ${gameMode}`;
+  // Hide all main screens except game
   document.getElementById("home-screen").classList.add("hidden");
+  document.getElementById("tutorial-screen").classList.add("hidden");
   document.getElementById("game-screen").classList.remove("hidden");
   updatePlayerUI();
   updateTurnIndicator();
@@ -69,6 +71,10 @@ function startGame(mode) {
 
 function returnHome() {
   if (confirm("Are you sure you want to return to the home screen? All progress will be lost.")) {
+    // Hide all main screens except home
+    document.getElementById("tutorial-screen").classList.add("hidden");
+    document.getElementById("game-screen").classList.add("hidden");
+    document.getElementById("home-screen").classList.remove("hidden");
     location.reload();
   }
 }
