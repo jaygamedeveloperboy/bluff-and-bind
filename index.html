@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bluff & Bind</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css?family=Cinzel:700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Merriweather:400,700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="home-screen">
+    <a href="#" onclick="returnHome()">
+      <img src="images/logo.png" alt="Bluff & Bind Logo" id="main-logo" style="max-width: 320px; width: 80%; height: auto; margin: 0 auto; display: block;">
+    </a>
+    <div class="emoji-picker" style="margin-bottom: 18px; display: flex; justify-content: center; gap: 32px;">
+      <div>
+        <div style="font-weight:bold; text-align:center; margin-bottom:4px;">Player 1 Emoji:</div>
+        <div id="player1-emoji-options" class="emoji-options">
+          <span class="emoji-circle" data-player="1" data-emoji="🐼">🐼</span>
+          <span class="emoji-circle" data-player="1" data-emoji="🐸">🐸</span>
+          <span class="emoji-circle" data-player="1" data-emoji="🐷">🐷</span>
+          <span class="emoji-circle" data-player="1" data-emoji="🍑">🍑</span>
+          <span class="emoji-circle" data-player="1" data-emoji="🍆">🍆</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-weight:bold; text-align:center; margin-bottom:4px;">Player 2 Emoji:</div>
+        <div id="player2-emoji-options" class="emoji-options">
+          <span class="emoji-circle" data-player="2" data-emoji="🐼">🐼</span>
+          <span class="emoji-circle" data-player="2" data-emoji="🐸">🐸</span>
+          <span class="emoji-circle" data-player="2" data-emoji="🐷">🐷</span>
+          <span class="emoji-circle" data-player="2" data-emoji="🍑">🍑</span>
+          <span class="emoji-circle" data-player="2" data-emoji="🍆">🍆</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin: 18px 0;">
+      <label style="font-weight:bold; font-size:1.1em; color:#a62a28;">
+        <input type="checkbox" id="cpu-toggle" style="transform:scale(1.3); margin-right:8px;"> Play vs CPU
+      </label>
+    </div>
+    <p>Select your game mode:</p>
+    <div class="mode-buttons">
+      <button onclick="startGame('Easy')" title="Gentle: 8 tokens per player. Light, playful punishments. Good for beginners.">Easy</button>
+      <button onclick="startGame('Medium')" title="Standard: 6 tokens per player. Moderate punishments. Balanced challenge.">Medium</button>
+      <button onclick="startGame('Hard')" title="Intense: 5 tokens per player. Explicit, challenging punishments. For experienced players.">Hard</button>
+      <button onclick="startGame('Extreme')" title="Extreme: 4 tokens per player. Very explicit, high-stakes punishments. For advanced players only.">Extreme</button>
+    </div>
+    <button id="tutorial-btn" onclick="showTutorial()">How to Play</button>
+  </div>
+
+  <div id="tutorial-screen" class="hidden">
+    <h2>How to Play Bluff & Bind</h2>
+    <div class="tutorial-content">
+      <h3>Game Rules</h3>
+      <ul>
+        <li>Each player starts with tokens based on difficulty</li>
+        <li>Choose one of five actions each round: Attack, Defend, Submit, Trap, or Wild</li>
+        <li>Cards become locked after use for 2 rounds</li>
+        <li>Wildcards can only be used once per game</li>
+        <li>Last player with tokens wins!</li>
+      </ul>
+      
+      <h3>Card Effects</h3>
+      <ul>
+        <li>Attack: Strong against Submit, weak against Trap</li>
+        <li>Defend: Strong against Attack, weak against Trap</li>
+        <li>Submit: Strong against Trap, weak against Attack</li>
+        <li>Trap: Strong against Attack/Defend, weak against Submit</li>
+        <li>Wild: Chaos effect, both players lose tokens</li>
+      </ul>
+
+      <h3>Perks</h3>
+      <ul>
+        <li>Control: Force opponent's next move</li>
+        <li>Reverse: Reverse the outcome of a round</li>
+        <li>Trap: Set a trap that activates on opponent's next move</li>
+      </ul>
+    </div>
+    <button onclick="hideTutorial()">Start Playing</button>
+  </div>
+
+  <div id="game-screen" class="hidden">
+    <button id="home-button" onclick="returnHome()">🏠</button>
+    <a href="#" onclick="returnHome()">
+      <img src="images/logo.png" alt="Bluff & Bind Logo" id="main-logo" style="max-width: 240px; width: 60%; height: auto; margin: 0 auto 10px auto; display: block;">
+    </a>
+    <h3 id="mode">Mode: </h3>
+    <div id="turn-indicator" class="turn-indicator">Player 1's Turn</div>
+
+    <!-- Player 1 Section -->
+    <div id="player1" style="position: relative;">
+      <div class="player-info">
+        <div class="token-display">
+          <img src="images/token.png" alt="Token" class="token-icon" />
+          <span id="player1-tokens">5</span>
+        </div>
+        <p>Perks: <span id="player1-perks">None</span></p>
+      </div>
+      <div class="last-turn-info" id="player1-last-turn"></div>
+      <div class="game-area">
+        <div id="player1-card-grid" class="card-grid">
+          <div class="card">
+            <img src="images/attack.png" alt="Attack" onclick="selectCard('ATTACK')" />
+            <div class="card-tooltip">Strong against: Submit&#10;Weak against: Defend&#10;Counters: Trap, Wild</div>
+          </div>
+          <div class="card">
+            <img src="images/defend.png" alt="Defend" onclick="selectCard('DEFEND')" />
+            <div class="card-tooltip">Strong against: Attack, Wild&#10;Weak against: Submit&#10;Counters: Trap</div>
+          </div>
+          <div class="card">
+            <img src="images/submit.png" alt="Submit" onclick="selectCard('SUBMIT')" />
+            <div class="card-tooltip">Strong against: Defend&#10;Weak against: Attack, Wild&#10;Counters: Trap</div>
+          </div>
+          <div class="card">
+            <img src="images/trap.png" alt="Trap" onclick="selectCard('TRAP')" />
+            <div class="card-tooltip">Strong against: Attack, Submit, Wild&#10;Weak against: Defend</div>
+          </div>
+          <div class="card wildcard">
+            <img src="images/wildcard.png" alt="Wildcard" onclick="selectCard('WILD')" />
+            <div class="card-tooltip">Strong against: Submit&#10;Weak against: Defend, Trap, Attack</div>
+          </div>
+        </div>
+        <div id="player1-perk-display" class="perk-display">
+          <div class="perk-title">Available Perks</div>
+          <div id="player1-perk-buttons" class="perk-buttons"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player 2 Section -->
+    <div id="player2" class="hidden" style="position: relative;">
+      <div class="player-info">
+        <div class="token-display">
+          <img src="images/token.png" alt="Token" class="token-icon" />
+          <span id="player2-tokens">5</span>
+        </div>
+        <p>Perks: <span id="player2-perks">None</span></p>
+      </div>
+      <div class="last-turn-info" id="player2-last-turn"></div>
+      <div class="game-area">
+        <div id="player2-card-grid" class="card-grid">
+          <div class="card">
+            <img src="images/attack.png" alt="Attack" onclick="selectCard('ATTACK')" />
+            <div class="card-tooltip">Strong against: Submit&#10;Weak against: Defend&#10;Counters: Trap, Wild</div>
+          </div>
+          <div class="card">
+            <img src="images/defend.png" alt="Defend" onclick="selectCard('DEFEND')" />
+            <div class="card-tooltip">Strong against: Attack, Wild&#10;Weak against: Submit&#10;Counters: Trap</div>
+          </div>
+          <div class="card">
+            <img src="images/submit.png" alt="Submit" onclick="selectCard('SUBMIT')" />
+            <div class="card-tooltip">Strong against: Defend&#10;Weak against: Attack, Wild&#10;Counters: Trap</div>
+          </div>
+          <div class="card">
+            <img src="images/trap.png" alt="Trap" onclick="selectCard('TRAP')" />
+            <div class="card-tooltip">Strong against: Attack, Submit, Wild&#10;Weak against: Defend</div>
+          </div>
+          <div class="card wildcard">
+            <img src="images/wildcard.png" alt="Wildcard" onclick="selectCard('WILD')" />
+            <div class="card-tooltip">Strong against: Submit&#10;Weak against: Defend, Trap, Attack</div>
+          </div>
+        </div>
+        <div id="player2-perk-display" class="perk-display">
+          <div class="perk-title">Available Perks</div>
+          <div id="player2-perk-buttons" class="perk-buttons"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="round-result" class="hidden">
+      <div id="round-result-header" class="round-result-header"></div>
+      <div class="results-panels">
+        <div class="player-result-panel" id="player1-result-panel">
+          <div class="player-label">Player 1</div>
+          <div class="result-avatar" id="player1-avatar"></div>
+          <div class="result-tokens" id="player1-result-tokens"></div>
+          <div class="result-perks" id="player1-result-perks"></div>
+          <div class="result-punishment" id="player1-result-punishment"></div>
+        </div>
+        <div class="player-result-panel" id="player2-result-panel">
+          <div class="player-label">Player 2</div>
+          <div class="result-avatar" id="player2-avatar"></div>
+          <div class="result-tokens" id="player2-result-tokens"></div>
+          <div class="result-perks" id="player2-result-perks"></div>
+          <div class="result-punishment" id="player2-result-punishment"></div>
+        </div>
+      </div>
+      <div id="punishment-choice-area"></div>
+      <div id="game-history" class="game-history">
+        <h4>Game History</h4>
+        <div id="history-list"></div>
+      </div>
+      <button onclick="nextRound()">Next Round</button>
+    </div>
+  </div>
+
+  <script src="punishments.js"></script>
+  <script src="perks.js"></script>
+  <script src="matchups.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
