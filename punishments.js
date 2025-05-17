@@ -690,7 +690,7 @@ const PUNISHMENTS = {
     "Let your opponent write \"hole 1,\" \"hole 2,\" \"hole 3\" across your body.",
     "Be passed from hand to hand—every new touch must be met with \"thank you, next.\"",
     "Lie in the center of the floor, dripping, fully still, as if waiting for your turn again.",
-    "Crawl to the edge of a doorway and beg for use while restrained.",
+    "Tie up balls (or nipples if woman) to a weight and crawl around the room begging for use while restrained.",
     "Simulate being used by a team—mouth, hands, ass, pussy all claimed.",
     "Stay plugged and nipple-clamped while on your knees, hands up.",
     "Edge three times in a row while balancing something on your lower back.",

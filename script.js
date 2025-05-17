@@ -15,6 +15,9 @@ let playerHistory = [];
 let cpuHistory = [];
 let cpuWeights = { 'ATTACK': 1, 'DEFEND': 1, 'SUBMIT': 1, 'TRAP': 1, 'WILD': 0.5 };
 let customPunishments = [];
+let isEscalatingMode = false;
+let currentMode = '';
+let startingTokens = { 1: 5, 2: 5 }; // Track starting tokens for escalating mode
 
 const GAME_MODES = {
   'Easy': { tokens: 14, intensity: 1 },    // 7 pieces of clothing
@@ -35,7 +38,27 @@ function hideTutorial() {
   document.getElementById("home-screen").classList.remove("hidden");
 }
 
+function showHomeScreen() {
+  // ... existing code ...
+  const modeButtons = document.createElement('div');
+  modeButtons.className = 'mode-buttons';
+  modeButtons.innerHTML = `
+    <button onclick="startGame('easy')">Easy Mode</button>
+    <button onclick="startGame('hard')">Hard Mode</button>
+    <button onclick="startGame('extreme')">Extreme Mode</button>
+    <button onclick="startGame('escalating')">Escalating Mode</button>
+  `;
+  // ... existing code ...
+}
+
 function startGame(mode) {
+  if (mode === 'escalating') {
+    currentMode = 'easy';
+    isEscalatingMode = true;
+  } else {
+    currentMode = mode;
+    isEscalatingMode = false;
+  }
   gameMode = mode;
   document.getElementById("mode").innerText = `Mode: ${gameMode}`;
   const modeConfig = GAME_MODES[mode];
@@ -58,6 +81,7 @@ function startGame(mode) {
 
   // Reset game state
   tokens = { 1: p1Clothing, 2: p2Clothing };
+  startingTokens = { 1: p1Clothing, 2: p2Clothing }; // Store starting tokens for escalating mode
   perks = { 1: [], 2: [] };
   wildUsed = { 1: false, 2: false };
   choices = {};
@@ -1158,13 +1182,34 @@ function evaluateMatchup(p1, p2, state) {
   if (wildWin) {
     punishmentDiff = nextDifficulty[state.gameMode] || state.gameMode;
   }
-  if (tokenLossP1 > 0) {
-    result.punishments[1] = getRandomPunishment(punishmentDiff, 2);
-    console.log('Punishment assigned to Player 1:', result.punishments[1]);
+  // Escalating mode: determine punishment difficulty based on tokens lost
+  function getEscalatingDifficulty(player) {
+    const lost = startingTokens[player] - result.tokens[player];
+    if (lost >= 4) return 'Extreme';
+    if (lost >= 3) return 'Hard';
+    if (lost >= 2) return 'Medium';
+    return 'Easy';
   }
-  if (tokenLossP2 > 0) {
-    result.punishments[2] = getRandomPunishment(punishmentDiff, 2);
-    console.log('Punishment assigned to Player 2:', result.punishments[2]);
+  if (isEscalatingMode) {
+    if (tokenLossP1 > 0) {
+      const diff = getEscalatingDifficulty(1);
+      result.punishments[1] = getRandomPunishment(diff, 2);
+      console.log('Punishment assigned to Player 1:', result.punishments[1]);
+    }
+    if (tokenLossP2 > 0) {
+      const diff = getEscalatingDifficulty(2);
+      result.punishments[2] = getRandomPunishment(diff, 2);
+      console.log('Punishment assigned to Player 2:', result.punishments[2]);
+    }
+  } else {
+    if (tokenLossP1 > 0) {
+      result.punishments[1] = getRandomPunishment(punishmentDiff, 2);
+      console.log('Punishment assigned to Player 1:', result.punishments[1]);
+    }
+    if (tokenLossP2 > 0) {
+      result.punishments[2] = getRandomPunishment(punishmentDiff, 2);
+      console.log('Punishment assigned to Player 2:', result.punishments[2]);
+    }
   }
 
   // Update consecutive wins

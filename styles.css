@@ -756,3 +756,76 @@ button:hover {
   background: #a62a28;
   color: #fff;
 }
+
+/* Fast tooltip for mode-buttons and menu buttons */
+.mode-buttons button[title] {
+  position: relative;
+}
+.mode-buttons button[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  top: 110%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.82em;
+  font-family: Arial, Helvetica, sans-serif;
+  white-space: pre-line;
+  z-index: 100;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 0.1s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+.mode-buttons button[title]::after {
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+}
+.mode-buttons button[title]:hover::after {
+  opacity: 1;
+}
+
+.mode-buttons button[title]:hover::after, label[title]:hover::after, label[title]:focus-within::after {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.68em;
+}
+
+/* Show tooltip when hovering the input inside a label with a title */
+label[title] {
+  position: relative;
+}
+label[title]:hover::after,
+label[title]:focus-within::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  top: 110%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.68em;
+  white-space: pre-line;
+  z-index: 100;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 0.1s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+label[title]::after {
+  content: '';
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.1s;
+}
+label[title]:hover::after,
+label[title]:focus-within::after {
+  opacity: 1;
+}
