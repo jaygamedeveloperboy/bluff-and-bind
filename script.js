@@ -119,6 +119,7 @@ function returnHome() {
     playerHistory = [];
     cpuHistory = [];
     cpuWeights = { 'ATTACK': 1, 'DEFEND': 1, 'SUBMIT': 1, 'TRAP': 1, 'WILD': 0.5 };
+    startingTokens = { 1: 5, 2: 5 }; // Reset starting tokens
 
     // Hide all main screens except home
     document.getElementById("tutorial-screen").classList.add("hidden");
