@@ -20,10 +20,11 @@ let currentMode = '';
 let startingTokens = { 1: 5, 2: 5 }; // Track starting tokens for escalating mode
 
 const GAME_MODES = {
-  'Easy': { tokens: 14, intensity: 1 },    // 7 pieces of clothing
-  'Medium': { tokens: 10, intensity: 1 },  // 5 pieces of clothing
-  'Hard': { tokens: 6, intensity: 1 },     // 3 pieces of clothing
-  'Extreme': { tokens: 6, intensity: 1 }   // 3 pieces of clothing
+  'Easy': { intensity: 1 },
+  'Medium': { intensity: 1 },
+  'Hard': { intensity: 1 },
+  'Extreme': { intensity: 1 },
+  'escalating': { intensity: 1 }
 };
 
 function showTutorial() {
@@ -415,15 +416,11 @@ function selectCard(card) {
       if (cpuEnabled) setTimeout(cpuMove, 900);
     });
   } else {
-    const p2Panel = document.getElementById("player2");
-    if (p2Panel.classList.contains("hidden")) {
+    // Always show results after player 2's turn, regardless of mode
+    fadeSwitch(document.getElementById("player2"), () => {
+      document.getElementById("player2").classList.add("hidden");
       showResult();
-    } else {
-      fadeSwitch(p2Panel, () => {
-        p2Panel.classList.add("hidden");
-        showResult();
-      });
-    }
+    });
   }
 }
 
@@ -465,6 +462,12 @@ function showResult() {
     consecutiveWins
   });
 
+  // Ensure result is defined before proceeding
+  if (!result) {
+    console.error('Error: evaluateMatchup returned undefined result');
+    return;
+  }
+
   // Check for Reverse perk
   if (activePerks[1]?.type === 'Reverse' && result.punishments[1].length > 0) {
     result.punishments[2] = result.punishments[1];
@@ -482,7 +485,7 @@ function showResult() {
   result.punishments = result.punishments || {1: [], 2: []};
 
   // Clothing removal message (for every full token lost)
-  const initialTokens = GAME_MODES[gameMode].tokens;
+  const initialTokens = startingTokens[1];
   const prevClothing1 = Math.floor(initialTokens - prevTokens[1]);
   const prevClothing2 = Math.floor(initialTokens - prevTokens[2]);
   const currClothing1 = Math.floor(initialTokens - result.tokens[1]);
@@ -1018,7 +1021,7 @@ const originalShowResult = showResult;
 showResult = function() {
   const partyToggle = document.getElementById('party-toggle');
   const isPartyMode = partyToggle && partyToggle.checked;
-  originalShowResult.apply(this, arguments);
+  originalShowResult();
   const lastResult = gameHistory[gameHistory.length-1];
   const embed = document.getElementById('punishment-wheel-embed');
   const choiceArea = document.getElementById('punishment-choice-area');
